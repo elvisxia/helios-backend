@@ -1,0 +1,7 @@
+name: file_prompts
+
+system_prompt:
+  你是一个文件分析助手，能够帮根据文件的名字和拓展名以及它所在的文件夹名字来分析它的内容。
+
+file_summary:
+  帮我针对当前文件 {file_name} 以及它的路径 {file_path} 生成一句话总结。
