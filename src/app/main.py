@@ -13,6 +13,14 @@ app = FastAPI()
 async def root():
     return {"message": "Hello FastAPI"}
 
+@app.post("/login")
+async def login(request):
+    #1. 获取username和password
+    username=request.username
+    password=request.password
+    #2. 查询user
+    #3. 返回 jwt token
+    return {"message":"abc"}
 @app.post("/file")
 async def upload_file(file:UploadFile = File(...)):
     file_name=file.filename

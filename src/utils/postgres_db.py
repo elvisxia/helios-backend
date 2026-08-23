@@ -10,7 +10,7 @@ from psycopg_pool import ConnectionPool
 
 
 
-class PostgresDAO:
+class PostgresDB:
     def __init__(self,pool:ConnectionPool):
         self.pool = pool
 
