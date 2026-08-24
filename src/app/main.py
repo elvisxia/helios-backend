@@ -1,12 +1,23 @@
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 
+from app.models.login_request import LoginRequest
 from websocket import manager
 from dotenv import load_dotenv
+from utils.container import container
 
 load_dotenv()
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
@@ -14,13 +25,13 @@ async def root():
     return {"message": "Hello FastAPI"}
 
 @app.post("/login")
-async def login(request):
+async def login(request:LoginRequest):
     #1. 获取username和password
     username=request.username
     password=request.password
     #2. 查询user
-    #3. 返回 jwt token
-    return {"message":"abc"}
+    res=container.user_service.login_user(user_name=username,password=password)
+    return res
 @app.post("/file")
 async def upload_file(file:UploadFile = File(...)):
     file_name=file.filename

@@ -15,7 +15,7 @@ class TokenUtil:
         token=jwt.encode(
             payload=payload,
             key=SECRET_KEY,
-            algorithm=ALGORITHM
+            algorithm=ALGORITHM,
         )
         return token
 
