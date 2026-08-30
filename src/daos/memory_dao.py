@@ -7,9 +7,8 @@ from utils.embedding_util import EmbeddingUtil
 
 
 class MemoryDAO:
-    def __init__(self,embedding_util,milvus_client):
+    def __init__(self,milvus_client):
         self.client=milvus_client
-        self.embedding_util=embedding_util
 
     def save_memory(self,user_id:str,text:str):
         """
@@ -21,7 +20,7 @@ class MemoryDAO:
         Returns:
             insert outcome
         """
-        embedding=self.embedding_util.text_to_embedding(text)
+        embedding=EmbeddingUtil.text_to_embedding(text)
         data={
             "id":str(uuid4()),
             "text":text,
@@ -46,7 +45,7 @@ class MemoryDAO:
         Returns:
             insert outcome
         """
-        embeddings=self.embedding_util.texts_to_embeddings(texts)
+        embeddings=EmbeddingUtil.texts_to_embeddings(texts)
         data=list()
         for idx,embedding in enumerate(embeddings):
             data.append({
@@ -90,7 +89,7 @@ class MemoryDAO:
         Returns:
             the updated memory id and update count ex: {'upsert_count': 1, 'ids': ['e7707f46-a0e9-492d-a823-74453e3483cc']}
         """
-        embedding=self.embedding_util.text_to_embedding(text)
+        embedding=EmbeddingUtil.text_to_embedding(text)
         data={
             "id":id,
             "text":text,
@@ -149,7 +148,7 @@ class MemoryDAO:
         Returns:
             all the searched memories
         """
-        query_vector=self.embedding_util.text_to_embedding(query)
+        query_vector=EmbeddingUtil.text_to_embedding(query)
         res=self.client.search(
             collection_name="memory",
             filter=f"user_id=='{user_id}'",

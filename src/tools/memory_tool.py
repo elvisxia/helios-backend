@@ -1,6 +1,6 @@
 from os import name
 
-from fastmcp.tools import tool
+from langchain_core.tools import tool
 from langgraph.prebuilt import ToolRuntime
 from scripts.regsetup import description
 
@@ -11,7 +11,7 @@ class MemoryTools:
         self.memory_service=memory_service
 
     def get_tools(self):
-        @tool(name="save_memory")
+        @tool(name_or_callable="save_memory")
         def save_memory(text:str,runtime:ToolRuntime[MainContext]):
             """
             保存用户要求记住的内容
@@ -26,7 +26,7 @@ class MemoryTools:
             result=memory_service.save_memories(user_id=user_id,text=text)
             return result
 
-        @tool(name="search memory")
+        @tool(name_or_callable="search_memory")
         def search_memory(text:str,runtime:ToolRuntime[MainContext]):
             """
             搜索用户的记忆
@@ -42,7 +42,7 @@ class MemoryTools:
             result=memory_service.search_memory(user_id=user_id,text=text)
             return result
 
-        @tool(name="update_memory")
+        @tool(name_or_callable="update_memory")
         def update_memory(old_text:str,new_text:str,runtime:ToolRuntime):
             """
             更改用户的的记忆，需要提供memory_id和旧的记忆内容和新的记忆内容

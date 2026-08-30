@@ -19,6 +19,12 @@ class TokenUtil:
         )
         return token
 
+    @staticmethod
+    def decode_token(token:str)->dict:
+        ALGORITHM = "HS256"
+        SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+        return jwt.decode(jwt=token,algorithms=ALGORITHM,key=SECRET_KEY)
+
 
 if __name__ == '__main__':
     load_env()

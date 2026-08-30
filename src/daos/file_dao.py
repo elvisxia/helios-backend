@@ -1,9 +1,12 @@
+from datetime import timedelta
+
 from minio.helpers import ObjectWriteResult
 
 
 class FileDAO:
     def __init__(self,minio_client):
         self.minio_client=minio_client
+        self.bucket_name="helios"
 
     def upload_file(self,folder_name:str,file_name:str,file_path:str,content_type:str):
         """
@@ -17,12 +20,41 @@ class FileDAO:
             返回存储结果 ex：ObjectWriteResult(bucket_name='helios', object_name='test/test.pdf', version_id=None, etag='290754a9b1fa76f65ddfb75826b83dfe', http_headers=HTTPHeaderDict({'Accept-Ranges': 'bytes', 'Content-Length': '0', 'ETag': '"290754a9b1fa76f65ddfb75826b83dfe"', 'Server': 'MinIO', 'Strict-Transport-Security': 'max-age=31536000; includeSubDomains', 'Vary': 'Origin, Accept-Encoding', 'X-Amz-Id-2': 'dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8', 'X-Amz-Request-Id': '18CD5A385D588604', 'X-Content-Type-Options': 'nosniff', 'X-Ratelimit-Limit': '2051', 'X-Ratelimit-Remaining': '2051', 'X-Xss-Protection': '1; mode=block', 'Date': 'Wed, 19 Aug 2026 23:57:05 GMT'}), last_modified=None, location=None)
         """
         res=self.minio_client.fput_object(
-            bucket_name="helios",
+            bucket_name=self.bucket_name,
             object_name=f"{folder_name}/{file_name}",
             file_path=file_path,
             content_type=content_type
         )
         return res
+
+    def create_upload_url(self,file_name:str,user_id:str):
+        object_name=f"{user_id}/{file_name}"
+        url=self.minio_client.presigned_put_object(
+            bucket_name=self.bucket_name,
+            object_name=object_name,
+            expires=timedelta(minutes=30)
+        )
+        return url
+
+    def create_delete_url(self, file_name: str, user_id: str):
+        object_name = f"{user_id}/{file_name}"  # 按你实际的路径规则拼
+        url = self.minio_client.get_presigned_url(
+            method="DELETE",
+            bucket_name=self.bucket_name,
+            object_name=object_name,
+            expires=timedelta(minutes=10),
+        )
+        return url
+
+    def create_download_url(self,file_path:str,user_id:str):
+        object_name=f"{user_id}/{file_path}"
+        url=self.minio_client.presigned_get_object(
+            bucket_name=self.bucket_name,
+            object_name=object_name,
+            expires=timedelta(minutes=60)
+        )
+        return url
+
 
     def get_file(self,file_path:str):
         """
@@ -61,5 +93,7 @@ if __name__=="__main__":
     #                                    content_type="application/pdf")
 
     #res=container.file_dao.get_file(file_path="test/test.pdf")
-    res=container.file_dao.delete_file("test/test.pdf")
-    print(res)
+    #res=container.file_dao.delete_file("test/test.pdf")
+    file_dao=container.file_dao
+    url=file_dao.create_upload_url(file_name="test2.pdf", user_id="test_user")
+    print(url)

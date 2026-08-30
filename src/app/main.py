@@ -1,9 +1,12 @@
+import httpx
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.agent_main import MainAgent
 from app.models.login_request import LoginRequest
-from websocket import manager
+from utils.token_util import TokenUtil
+from fastapi import WebSocket
 from dotenv import load_dotenv
 from utils.container import container
 
@@ -19,10 +22,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/")
 async def root():
     return {"message": "Hello FastAPI"}
+
+@app.get("/file/upload_url")
+async def get_upload_url(file_name:str,user_id:str):
+    file_service=container.file_service
+    return file_service.create_upload_url(file_name,user_id)
+
+@app.get("/file/delete_url")
+async def get_delete_url(file_name:str,user_id:str):
+    file_service=container.file_service
+    return file_service.create_delete_url(file_name,user_id)
 
 @app.post("/login")
 async def login(request:LoginRequest):
@@ -32,7 +44,7 @@ async def login(request:LoginRequest):
     #2. 查询user
     res=container.user_service.login_user(user_name=username,password=password)
     return res
-@app.post("/file")
+@app.post("/file/upload")
 async def upload_file(file:UploadFile = File(...)):
     file_name=file.filename
     size=file.size
@@ -41,22 +53,24 @@ async def upload_file(file:UploadFile = File(...)):
     return {"message":"upload success"}
 
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
-
+async def websocket_endpoint(websocket: WebSocket,token: str):
+    await websocket.accept()
+    decoded=TokenUtil.decode_token(token)
+    user_id=decoded['id']
+    agent=MainAgent(user_id)
     try:
         while True:
             data = await websocket.receive_text()
 
             print(f"收到客户端消息: {data}")
-
-            await manager.send(
-                websocket,
-                f"Server: You said -> {data}"
-            )
+            async for chunk in agent.stream_async(data):
+                await websocket.send_json({
+                    'id':chunk.id,
+                    'content':chunk.content,
+                })
 
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        await websocket.close()
         print("客户端断开连接")
 
 if __name__ == "__main__":

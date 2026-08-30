@@ -5,15 +5,12 @@ from llms.deepseek_llm import deepseek_llm
 
 
 class LLMUtil:
-    def __init__(self,model):
-        self.model=model
-
-    def query(self,prompt:str):
-        res=self.model.invoke(prompt)
+    @classmethod
+    def invoke(cls,prompt:str):
+        res=deepseek_llm.invoke(prompt)
         return res
 
 
 if __name__=="__main__":
-    llm_service=LLMUtil(model=deepseek_llm)
-    res=llm_service.query("你好")
+    res=LLMUtil.invoke("你好")
     print(res)

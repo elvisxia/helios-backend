@@ -1,12 +1,16 @@
 from uuid import uuid4
 from datetime import datetime
+
+from app.models.dao.file_meta import FileMeta
+from utils.embedding_util import EmbeddingUtil
+
+
 class FileMetaDao:
-    def __init__(self,milvus_client,embedding_util):
+    def __init__(self,milvus_client):
         self.client=milvus_client
-        self.embedding_util=embedding_util
 
     def save_file_meta(self,text:str,file_path:str,user_id:str):
-        embedding=self.embedding_util.text_to_embedding(text)
+        embedding=EmbeddingUtil.text_to_embedding(text)
         data={
             "id":str(uuid4()),
             "embedding":embedding,
@@ -21,25 +25,33 @@ class FileMetaDao:
         )
         return res
 
-    def save_file_metas(self,text_list:list,file_path_list:list,user_id:str):
-        embeddings=self.embedding_util.text_to_embedding(text_list)
-        data=list()
-        for idx,item in enumerate(embeddings):
-            data.append({
-                "id":str(uuid4()),
-                "embedding":item,
-                "text":text_list[idx],
-                "user_id":user_id,
-                "file_path":file_path_list[idx],
-                "create_time":str(datetime.now()),
-            })
+    def save_file_metas(self,file_metas:list[FileMeta]):
+        rows=[fm.model_dump() for fm in file_metas]
         res=self.client.insert(
             collection_name="file",
-            data=data)
+            data=rows
+        )
         return res
 
+    # def save_file_metas(self,text_list:list,file_path_list:list,user_id:str):
+    #     embeddings=EmbeddingUtil.text_to_embedding(text_list)
+    #     data=list()
+    #     for idx,item in enumerate(embeddings):
+    #         data.append({
+    #             "id":str(uuid4()),
+    #             "embedding":item,
+    #             "text":text_list[idx],
+    #             "user_id":user_id,
+    #             "file_path":file_path_list[idx],
+    #             "create_time":str(datetime.now()),
+    #         })
+    #     res=self.client.insert(
+    #         collection_name="file",
+    #         data=data)
+    #     return res
+
     def update_file_meta(self,id:str,new_text:str,new_file_path:str,user_id:str):
-        embedding=self.embedding_util.text_to_embedding(new_text)
+        embedding=EmbeddingUtil.text_to_embedding(new_text)
         data={
             "id":id,
             "embedding":embedding,
@@ -62,7 +74,7 @@ class FileMetaDao:
         return res
 
     def search_file_meta(self,text:str,user_id:str):
-        search_embedding=self.embedding_util.text_to_embedding(text)
+        search_embedding=EmbeddingUtil.text_to_embedding(text)
         res=self.client.search(
             collection_name="file",
             filter=f"user_id == '{user_id}'",

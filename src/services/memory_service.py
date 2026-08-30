@@ -1,10 +1,10 @@
+from utils.llm_util import LLMUtil
 from utils.prompt_util import PromptUtil
 import ast
 
 class MemoryService:
-    def __init__(self,memory_dao,llm_util):
+    def __init__(self,memory_dao):
         self.memory_dao= memory_dao
-        self.llm_util = llm_util
 
     def save_memories(self,user_id:str,text:str):
         """
@@ -35,8 +35,11 @@ class MemoryService:
         Returns:
             search result
         """
-        result=self.memory_dao.search_memories(query=text,user_id=user_id)
-        return result
+        search_result=self.memory_dao.search_memories(query=text,user_id=user_id)
+        final_res=""
+        for item in search_result:
+            final_res+=f"{item["text"]}\n"
+        return final_res
 
     def update_memory(self,user_id:str,old_text:str,new_text:str):
         """
@@ -72,7 +75,7 @@ class MemoryService:
         prompt_template=PromptUtil.get_prompt_from_yaml("memory_prompts.yaml","memory_extraction")
         prompt=prompt_template.format(input=text)
         # 2. get memory list using llm
-        res=self.llm_util.query(prompt)
+        res=LLMUtil.invoke(prompt)
         return res
 
 
